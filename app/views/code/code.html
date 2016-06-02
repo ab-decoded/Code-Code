@@ -1,0 +1,11 @@
+{% extends '../layout.html' %}
+{% block style %}
+<link rel="stylesheet" type="text/css" href="components/codemirror/lib/codemirror.css">
+{% endblock %}
+{%block main%}
+<textarea id="codeArea"></textarea>
+{% endblock %}
+{% block script %}
+<script src="components/codemirror/lib/codemirror.js"></script>
+<script src="js/code_main.js"></script>
+{% endblock %}

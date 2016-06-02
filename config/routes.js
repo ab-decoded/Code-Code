@@ -52,4 +52,10 @@ module.exports = function(app,router,passport){
 	///////////////////////////////
 	var chat=require('../app/controllers/chat')
 	router.get('/chat',chat.index);
+
+	/////////////////////////////////
+	//chat routes///////////////////
+	///////////////////////////////
+	var code=require('../app/controllers/code')
+	router.get('/code',code.index);
 };
