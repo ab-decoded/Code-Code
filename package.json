@@ -1,0 +1,52 @@
+{
+  "name": "codecode",
+  "version": "0.0.1",
+  "description": "Just for fun",
+  "main": "index.js",
+  "scripts": {
+    "test": "gulp"
+  },
+  "keywords": [
+    "node",
+    "vue.js",
+    "gulp",
+    "socket.io"
+  ],
+  "dependencies": {
+    "babel": "^6.5.2",
+    "bcrypt-nodejs": "0.0.3",
+    "body-parser": "^1.15.0",
+    "co-express": "^1.2.1",
+    "compression": "^1.6.1",
+    "connect-flash": "^0.1.1",
+    "connect-mongo": "^1.2.0",
+    "cookie-parser": "^1.4.3",
+    "cookie-session": "^2.0.0-alpha.1",
+    "ejs": "latest",
+    "ejs-locals": "latest",
+    "express": "latest",
+    "express-logger": "0.0.3",
+    "express-session": "^1.13.0",
+    "html": "0.0.10",
+    "method-override": "^2.3.5",
+    "mongoose": "~4.3.0",
+    "morgan": "^1.6.1",
+    "multer": "^1.1.0",
+    "passport": "^0.3.2",
+    "passport-facebook": "^2.1.0",
+    "passport-google-oauth": "^1.0.0",
+    "passport-local": "^1.0.0",
+    "passport-twitter": "^1.0.4",
+    "serve-favicon": "^2.3.0",
+    "socket.io": "^1.4.6",
+    "swig": "^1.4.2"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-livereload": "^3.8.1",
+    "gulp-nodemon": "^2.0.6",
+    "gulp-util": "^3.0.7"
+  },
+  "author": "AB",
+  "license": "ISC"
+}

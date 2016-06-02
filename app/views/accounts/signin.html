@@ -1,0 +1,62 @@
+{% extends '../layout.html'  %}
+{% block style %}
+<style type="text/css">
+  #facebook-login{
+    box-shadow:0 0 0 1px rgba(59,89,152,.85) inset
+  }
+  #twitter-login{
+    box-shadow:0 0 0 1px rgba(101,159,203,.85) inset
+  }
+</style>
+{% endblock %}
+{% block main %}
+<div class="ui container two column middle aligned very relaxed stackable grid" id="store-signin">
+  <div class="column">
+    <button class="ui ab labeled facebook icon basic button social" id="facebook-login" onclick="location.href='/auth/facebook';">
+      <i class="facebook icon" style="background:#3B5998;color:#fff;"></i>
+      Sign in with Facebook
+    </button>
+    <button class="ui ab labeled twitter icon basic button social" id="twitter-login">
+      <i class="twitter icon" style="background:#55ACEE;color:#fff;"></i>
+      Sign in with Twitter
+    </button>
+  </div>
+  <div class="ui vertical divider">
+    Or
+  </div>
+  <div class="column">
+  <form class="ui ab form" role="form" id="passwordForm" method="post" action="/users/session">
+     <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+    <div class="field">
+      <label for="email"> Email</label>
+      <div class="ui left ab input">
+        <input type="text" name="email">
+      </div>
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <div class="ui left ab input">
+        <input type="password" name="password">
+      </div>
+    </div>
+    <button type="submit" class="ui ab teal basic animated button">
+      <div class="visible content">Login</div>
+      <div class="hidden content">
+        <i class="right arrow icon"></i>
+      </div>
+    </button>
+    <div class="ui error message"></div>
+    {% include '../partials/error.html' %}
+  </form>
+  <br>
+  <div>New user? <a href="/signup">Signup</a></div>
+</div>
+
+</div>
+{% endblock %}
+{% block script %}
+<script type="text/javascript" src="js/signin.js"></script>
+{% endblock %}
+
+
+

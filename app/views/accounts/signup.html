@@ -1,0 +1,60 @@
+{% extends '../layout.html'  %}
+{% block style %}
+{% endblock %}
+{% block main %}
+ <div>
+ 	<div class="ui ab center aligned grid " style="font-size:14px">
+    <div class="fourteen wide mobile eight wide tablet eight wide computer column">
+        <div class="ui attached blue message" style="border-radius:1px;">
+            <div class="header">Padhare!</div>
+            <p>Kripya apne baare me kuch bataye.</p>
+        </div>
+        <form class="ui ab form attached segment" method="post" action="/users">
+             <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+            <div class="field">
+                <div class="ui input">
+                    <input type="text" name="username" placeholder="Your username" value="{{user.username}}">
+                </div>
+            </div>
+            <div class="field">
+                <div class="ui input">
+                    <input type="text" name="email" placeholder="E-mail address" value="{{user.email}}">
+                </div>
+            </div>
+            <div class="field">
+                <div class="ui input">
+                    <input type="text" name="name" placeholder="Your name please" value="{{user.name}}">
+                </div>
+            </div>
+            <div class="field">
+                <div class="ui input">
+                    <input type="password" name="password" placeholder="Select a password">
+                </div>
+            </div>            
+            <div class="field">
+                <div class="ui input">
+                    <input type="password" name="confirm" placeholder="Confirm your password">
+                </div>
+            </div>
+            <button id="submitButton" type="submit" class="ui ab orange basic animated button" style="margin-bottom:25px" tabindex="0">
+                <div class="visible content">Signup</div>
+                <div class="hidden content"> <i class="right arrow icon"></i> </div>
+            </button>
+            <div class="ui error message" style="border-radius:1px;"></div>
+
+                {% include '../partials/error.html' %}
+        </form>
+
+        
+        <div class="ui bottom attached warning message" style="border-radius:1px;">
+            Already signed up? <a href="/signin">Signin here</a> instead.
+        </div>
+    </div>
+</div>
+
+</div>
+{% endblock %}
+
+{% block script %}
+<script type='text/javascript' src='js/signup.js'></script>
+{% endblock %}

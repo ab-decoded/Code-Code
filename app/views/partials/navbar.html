@@ -1,0 +1,32 @@
+<div id="navbar" class="ui ab top fixed segment menu">
+  <div class="item brand">
+    <a href="/"><b style="color:#252525">Code-Code</b></a>
+  </div>
+  {% if login %}
+    <div class="ui right dropdown simple item" id="navbarUserDropdown">
+      <span style="color:#252525">Hi {{user.name}}!</span>
+      <i class="dropdown icon" style="color:#252525"></i>
+      <div class="menu">
+        <a class="item" href="/profile">Profile</a>
+        <a class="item logout" href="/logout">Logout</a>
+      </div>
+    </div>
+  {% else %}
+    <a class="ui right item simple" href="/signin">Signin</a>
+  {% endif %}
+
+</div>
+
+<div id="navbar-mobile" class="ui ab top fixed menu">
+  <div class="item">
+    <a href="/" ><b>Code-code</b></a>
+  </div>
+  <a class="item right focus toggle-sidebar" sidebar-toggle><i class="fa fa-bars"></i></a>
+</div>
+  <div class="ui ab right sidebar vertical menu">
+        <i class="fa fa-user fa-lg icon-silver"></i> <span class="h-space-light"></span>Hi user!
+        <br>
+        <a class="item" href="/profile">Profile</a>
+        <a class="item logout" href="#">Logout</a>
+        <a class="item" href="/">Home</a>
+  </div>

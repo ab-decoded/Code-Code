@@ -1,0 +1,25 @@
+{
+  "name": "md-snackbars",
+  "version": "1.3.1",
+  "authors": [
+    "Guillaume <hi@guillaumemonnet.com>"
+  ],
+  "description": "Snackbars and Toasts based on Google's Material Design",
+  "main": ["dist/md-snackbars.min.js", "dist/md-snackbars.css"],
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.3"
+  }
+}

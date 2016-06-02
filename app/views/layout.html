@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<style>
+  a{
+    background:black;
+    color:white;
+  }
+</style>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title></title>
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/components/semantic/dist/semantic.min.css">
+    <link rel="stylesheet" href="/components/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/components/md-snackbars/dist/md-snackbars.min.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/ab.css">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    {% block style %}{% endblock %}
+    <base href="/">
+
+  </head>
+  <body>
+    {% include './partials/navbar.html' %}
+    <div class="pusher">
+      <div class="siteContainer">
+        {% block main %}{% endblock %}
+      </div>
+    </div>  
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://localhost:35729/livereload.js"></script>
+    <script src="/components/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="components/semantic/dist/semantic.min.js"></script>
+    <script type="text/javascript" src="components/md-snackbars/dist/md-snackbars.min.js"></script>
+    <script type="text/javascript" src="components/semantic/dist/semantic.min.js"></script>
+    <!-- <script type="text/javascript" src="js/index.js"></script> -->
+    <script type="text/javascript">
+      $(document).ready(function(){
+        $('.ui.sidebar').sidebar('attach events', '#navbar-mobile .toggle-sidebar');
+        MDSnackbars.init();
+        options={
+          toast:false,
+          fullWidth:true,
+          timeout:3000,
+          html:false,
+          animation:'slideup'
+        };
+        {% if (notify && notify.length) %}
+          {% for notif in notify %}
+            console.log('yolo');
+            options.text="{{notif}}"
+            MDSnackbars.show(options);
+          {% endfor %}
+        {% endif %}
+      });
+    </script>
+    {% block script %}{% endblock %}
+  </body>
+</html>
+

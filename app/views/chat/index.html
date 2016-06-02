@@ -1,0 +1,36 @@
+{% extends '../layout.html' %}
+{% block style %}
+{% endblock %}
+{%block main%}
+<form class="ui form" action="">
+	<div class="field">
+		<label>INPUT</label>
+		<div class="ui input">
+			<input type="text" id="message-input" placeholder="Message" name="message">
+		</div>
+	</div>
+	<button type="submit" class="ui button" type="submit">SEND</button> 
+</form>
+<div id="messages"></div>
+{% endblock %}
+{% block script %}
+<script type="text/javascript">
+	var socket=io();
+	$('.ui.form').submit(function(event){
+		event.preventDefault();
+		console.log(event.target.message.value);
+		socket.emit('chat message',event.target.message.value);
+		$('#message-input').val("");
+	});
+	$('#message-input').on('input',function(event){
+		console.log($(this).val());
+		socket.emit('live feed',$(this).val());
+	});
+	socket.on('chat message',function(msg){
+		$('#messages').append($('<li>').text(msg));
+	});
+	socket.on('live feed',function(msg){
+		$('#message-input').val(msg);
+	});
+</script>
+{% endblock %}
