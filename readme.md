@@ -1,3 +1,3 @@
-#CHITTHI
+#Code-Code
 
-* Just for fun
+*A codeshare.io clone in making*
