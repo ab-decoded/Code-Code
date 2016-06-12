@@ -4,8 +4,19 @@
 {% endblock %}
 {%block main%}
 <textarea id="codeArea"></textarea>
+<select class="ui search dropdown" id="mode-select">
+  <option value="">Select</option>
+  <option value="Javascript">Javascript</option>
+  <option value="C++">C++</option>
+  <option value="C">C</option>
+  <option value="Java">Java</option>
+  <option value="Python">Python</option>
+  <option value="Go">Go</option>
+</select>
 {% endblock %}
 {% block script %}
 <script src="components/codemirror/lib/codemirror.js"></script>
+<script src="components/codemirror/addon/mode/loadmode.js"></script>
+<script src="components/codemirror/mode/meta.js"></script>
 <script src="js/code_main.js"></script>
 {% endblock %}
