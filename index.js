@@ -20,10 +20,17 @@ require('./config/passport')(passport);
 require('./config/routes')(app,router,passport);
 require('./config/socket')(http);
 var db=require('./config/db');
+var redis=require('./config/redis');
 
 db.once('open', function () {
   console.log("Connected to Database: "+config.db);
 });
+
+redis.on('ready',function(){
+	console.log("Initialited Redis cache");
+});
+
+/*Start Server*/
 http.listen(config.port,function(){
 	console.log('listening on port '+config.port);
 });

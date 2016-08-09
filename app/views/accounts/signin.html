@@ -11,7 +11,8 @@
 {% endblock %}
 {% block main %}
 <div class="ui container two column middle aligned very relaxed stackable grid" id="store-signin">
-  <div class="column">
+  <div class="column" style="border-right:1px solid #ddd;">
+    <div style="width:250px;margin:0 auto;margin-bottom:5px;font-size:15px;"><strong>Signin with social account</strong></div>
     <button class="ui ab labeled facebook icon basic button social" id="facebook-login" onclick="location.href='/auth/facebook';">
       <i class="facebook icon" style="background:#3B5998;color:#fff;"></i>
       Sign in with Facebook
@@ -20,9 +21,6 @@
       <i class="twitter icon" style="background:#55ACEE;color:#fff;"></i>
       Sign in with Twitter
     </button>
-  </div>
-  <div class="ui vertical divider">
-    Or
   </div>
   <div class="column">
   <form class="ui ab form" role="form" id="passwordForm" method="post" action="/users/session">

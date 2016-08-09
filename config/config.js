@@ -4,6 +4,10 @@ var path = require('path'),
 
 var config={
   development:{
+    redis:{
+      port:6379,
+      host:'127.0.0.1'
+    },
     port:3000,
     root:rootPath,
     db:"mongodb://localhost/chitthi",
@@ -31,5 +35,6 @@ var config={
     port:3000,
     root:rootPath
   }
-}
+};
+
 module.exports = config[env];

@@ -4,7 +4,7 @@
 	-moz-background-size: cover;
 	-o-background-size: cover;
 	background-size: cover;*/
-	height:calc(100vh - 70px);
+	min-height:calc(100vh - 70px);
 	/*padding-top:100px;*/
 	color:#252525;
 	/*line-height:50vh;*/
@@ -13,3 +13,54 @@
 	padding:10%;
 	padding-bottom:2%;
 }
+.urlInput{
+	background:#EFEEEE;
+	height:50px;
+	display:block;
+	overflow:hidden;
+	margin:1em auto;
+	border:1px solid #dedede;
+}
+.abInput{
+	position:relative;
+	z-index:1;
+	max-width:320px;
+	width:calc(100% - 2em);
+}
+
+.input_field {
+	position: absolute;
+	top: 0;
+	float:right;
+	right: 30%;
+	width: 70%;
+	height: 100%;
+	background: #fff;
+	color: #2F3238;
+	border:2px solid #777;
+	padding:0 1em;
+	font-size: 15px;
+}
+
+.input_label{
+	float:right;
+	padding:0 1em;
+	color:#6A7989;
+	font-weight:bold;
+	font-size: 19px;
+	z-index: 10;
+	display: block;
+	width: 30%;
+	height: 100%;
+	text-align: left;
+	cursor: text;
+	-webkit-font-smoothing:antialiased;
+}
+.input_label_content{
+	height:100%;
+	padding:0.8em 0;
+	position:relative;
+	display:block;
+	width:100%;
+}
+

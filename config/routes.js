@@ -20,6 +20,7 @@ module.exports = function(app,router,passport){
 	//home route
 	var home = require('../app/controllers/home');
 	router.get('/',home.index);
+	
 	/////////////////////////////////
 	//accounts routes///////////////
 	///////////////////////////////
@@ -50,12 +51,13 @@ module.exports = function(app,router,passport){
 	/////////////////////////////////
 	//chat routes///////////////////
 	///////////////////////////////
-	var chat=require('../app/controllers/chat')
+	var chat=require('../app/controllers/chat');
 	router.get('/chat',chat.index);
+	router.get('/msg',chat.messages);
 
 	/////////////////////////////////
 	//chat routes///////////////////
 	///////////////////////////////
-	var code=require('../app/controllers/code')
+	var code=require('../app/controllers/code');
 	router.get('/code',code.index);
 };
