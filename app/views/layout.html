@@ -51,7 +51,7 @@
         {% if (notify && notify.length) %}
           {% for notif in notify %}
             console.log('yolo');
-            options.text="{{notif}}"
+            options.text="{{notif}}";
             MDSnackbars.show(options);
           {% endfor %}
         {% endif %}

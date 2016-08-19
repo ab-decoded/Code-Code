@@ -19,6 +19,7 @@
 	display:block;
 	overflow:hidden;
 	margin:1em auto;
+	margin-bottom:0;
 	border:1px solid #dedede;
 }
 .abInput{
@@ -62,5 +63,47 @@
 	position:relative;
 	display:block;
 	width:100%;
+}
+
+.urlWarning{
+	position:relative;
+	z-index:1;
+	max-width:320px;
+	width:-webkit-calc(100% - 2em);
+	width:calc(100% - 2em);
+	overflow:hidden;
+	display: block;
+	-webkit-transition-property:all;
+			transition-property: all;
+	-webkit-transition-duration: 0.5s;
+	        transition-duration: 0.5s;
+	-webkit-transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+	        transition-timing-function: cubic-bezier(0, 1, 0.5, 1);	
+
+}
+
+#abWarning{
+	color:#fff;
+	background:#E74C3C;
+	max-height:0px;
+	height: auto;
+	margin:0 auto;
+}
+#alreadyExistsSpan{
+	margin: 0 auto;
+	height: Auto;
+	max-height: 0px;
+	color: #fff;
+	background: #101010;
+}
+
+.activeWarning{
+	max-height: 100px !important;
+	padding-top: 8px;
+	padding-bottom: 8px;
+}
+
+#codeUrlButton{
+	margin:1em;
 }
 

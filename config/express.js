@@ -67,6 +67,7 @@ module.exports = function(app, config,router,passport) {
     //LOCALS SETUP
     app.use(function (req, res, next) {
 
+      res.locals.baseUrl="http://localhost:3000/"
       res.locals.login = req.isAuthenticated();
       res.locals.user=req.user;
       if (env === 'development') {
@@ -75,6 +76,7 @@ module.exports = function(app, config,router,passport) {
       console.log(req.isAuthenticated());
       next();
     });
+
 
     app.use(connectFlash());
     app.use('/',router);

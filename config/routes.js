@@ -6,7 +6,6 @@ function isLoggedIn(req,res,next){
 	res.redirect('/');
 }
 
-
 module.exports = function(app,router,passport){
 
 	var pauth = passport.authenticate.bind(passport);
@@ -56,8 +55,9 @@ module.exports = function(app,router,passport){
 	router.get('/msg',chat.messages);
 
 	/////////////////////////////////
-	//chat routes///////////////////
+	//code routes///////////////////
 	///////////////////////////////
 	var code=require('../app/controllers/code');
-	router.get('/code',code.index);
+	router.get('/addCodeUrl',code.urlController);
+	router.get('/:code',code.index);
 };

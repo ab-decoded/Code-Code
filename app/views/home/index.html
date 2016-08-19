@@ -12,12 +12,22 @@
 
 	</div>
 	<span class="abInput urlInput">
-		<input class="input_field" type="text" value="localhost:3000/" id="input-url" name="input-url">
+		<input class="input_field" type="text" value="{{baseUrl}}" id="codeUrlInput" name="input-url">
 		<label class="input_label" for="input-url">
 			<span class="abInput input_label_content">URL</span>
 		</label>
 	</span>
-	 	<div class="ui ab basic black button">Let's Go</div>
+	<span class="urlWarning" id="abWarning"></span>
+	<span class="urlWarning" id="alreadyExistsSpan">
+		<span style="padding-right:10px;">Go to the existing URL?</span>
+		<button class="circular ui icon basic inverted button" id="goToExisting">
+		  <i class="icon checkmark"></i>
+		</button>
+		<button class="circular ui icon basic inverted button" id="dontGoToExisting">
+		  <i class="icon remove"></i>
+		</button>
+	</span>
+	 	<div class="ui ab basic black button" id="codeUrlButton">Let's Go</div>
 </div>
 {% endblock %}
 <!-- <div class="main">
@@ -27,5 +37,60 @@
 </div> -->
 {% block script %}
 <script type="text/javascript">
+
+function errorDisplay(error){
+	$('#abWarning').html(error);
+    $("#abWarning").addClass("activeWarning");
+}
+
+function getUrlInfo(url){
+	$.ajax({
+	  url:'/addCodeUrl',
+	  type:"GET",
+	  dataType:'json',
+	  data:{'url':url},
+	  success:function(data){
+	    console.log(data);
+	    if(data.status=="failed"){
+	    	errorDisplay(data.error);
+	    }
+	    else{
+	    	if(data.urlExists===true){
+	    		errorDisplay("This code aready exists.");
+	    		$('#alreadyExistsSpan').addClass('activeWarning');
+	    		$('#goToExisting').on('click',function(){
+	    			window.location.href="{{baseUrl}}"+data.url;
+	    		});
+	    		$('#dontGoToExisting').on('click',function(){
+	    			$("#abWarning").removeClass("activeWarning");
+	    			$("#alreadyExistsSpan").removeClass("activeWarning");
+	    		});
+	    	}else{
+	    		window.location.href="{{baseUrl}}"+data.url;
+	    	}
+	    }
+	  }
+	});
+}
+$(document).ready(function(){
+
+	$("#codeUrlInput").on('input',function(){
+		$("#abWarning").removeClass("activeWarning");
+		$("#alreadyExistsSpan").removeClass("activeWarning");
+	});
+    $('#codeUrlButton').on('click',function(){
+    	var url=$('#codeUrlInput').val();
+    	if(url.indexOf("{{baseUrl}}")===-1){
+    		errorDisplay("Don't alter the base Url.");
+    	}else{
+    		url=url.replace("{{baseUrl}}","");
+    		if(url===''){
+    			errorDisplay("Please enter an identifier for your code.");
+    		}
+    		else
+    			getUrlInfo(url);
+    	}
+    });
+});
 </script>
 {% endblock %}

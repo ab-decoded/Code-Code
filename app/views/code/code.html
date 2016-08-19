@@ -3,6 +3,7 @@
 <link rel="stylesheet" type="text/css" href="components/codemirror/lib/codemirror.css">
 {% endblock %}
 {%block main%}
+<div></div>
 <textarea id="codeArea"></textarea>
 <select class="ui search dropdown" id="mode-select">
   <option value="">Select</option>
@@ -17,7 +18,16 @@
 {% block script %}
 <script src="components/codemirror/lib/codemirror.js"></script>
 <script src="components/codemirror/addon/mode/loadmode.js"></script>
+<script src="components/codemirror/addon/edit/matchbrackets.js"></script>
+<script src="components/codemirror/addon/edit/closebrackets.js"></script>
 <script src="components/codemirror/mode/meta.js"></script>
+<script type="text/javascript">
+// JUGAAD
+	login=("{{login}}"==="true");
+	userid="{{user.id}}";
+	username="{{user.name}}";
+	baseUrl="{{baseUrl}}";
+</script>
 <script type='text/javascript' src='js/index.js'></script>
 <script src="js/code_main.js"></script>
 {% endblock %}
