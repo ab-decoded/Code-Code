@@ -1,11 +1,13 @@
-var url=require('url');
+const url=require('url');
+const mongoose=require('mongoose');
+const Url = mongoose.model('Url');
 
-var config=require('./config.js');
-var redis = require("redis"),
+const config=require('./config.js');
+const redis = require("redis"),
 	client = redis.createClient(config.redis.port,config.redis.host),
     publisher = redis.createClient(config.redis.port,config.redis.host);
 
-var clients={};	
+const clients={};
 
 function broadcast_change(code,current_user_id,message){
 	client.smembers("code_users:"+code,function(err,users){
@@ -36,21 +38,57 @@ module.exports=function(server) {
 		var user;
 		console.log('Socket chala iss code pe!: '+code);
 		
-		var browser=redis.createClient(config.redis.port,config.redis.host);
+		var subscribers_redis=redis.createClient(config.redis.port,config.redis.host);
+		var code_redis=redis.createClient(config.redis.port,config.redis.host);
 
-		browser.subscribe("subscribers:"+code);
+		subscribers_redis.subscribe("subscribers:"+code);
+		code_redis.subscribe("code:"+code);
 
-		browser.on("message",function(channel,message){
+		subscribers_redis.on("message",function(channel,message){
 			client.sadd("code_users:"+code,message);
 		});
+
+		code_redis.on("message",function(channel,message){
+			client.hset("code_text:"+code,"code",message);
+		});
+
 		
 		conn.on('close',function(){
+			
+			//Remove user from subscribers list in Redis cache
 			if(user!==null){
 				client.srem("code_users:"+code,user);
 				// console.log(user);
 				console.log('Gaya connection!: '+code);
 			}
+			
+			//Remove conn from connected clients
 			delete clients[conn.id];
+
+			//Write the data to MongoDB
+			client.hget('code_text:'+code,"code",function(err,text){
+				if(err){
+					console.log('Could not read code from Redis Cache while writing to MongoDb: '+err);
+				}
+				else{
+					Url.findOne({ url: code }, function (err, doc){
+					  doc.data = text;
+					  doc.save();
+					});
+				}
+			});
+
+			//If the last instance of a code exits, the data is removed from Redis cache
+			client.smembers("code_users:"+code,function(err,users){
+				if(err){
+					console.log("Error reading members info subscribed for the code: "+err);
+					return;
+				}
+				if(users===null||users.length===0){
+					client.del("code_text:"+code,"code");
+				}
+			});
+
 		});
 
 		conn.on('data',function(msg){
@@ -66,15 +104,11 @@ module.exports=function(server) {
 			}
 			else if(msg.type==="codeChange"){
 				broadcast_change(code,conn.id,msg.change);
+				publisher.publish('code:'+code,msg.code);
 				console.log(msg);
 			}
-			// io.emit('chat message',msg);
 		});
 
-		// conn.on('live feed',function(msg){
-		// 	console.log('Live feed: '+msg);
-		// 	socket.broadcast.emit('live feed',msg);
-		// });
 	});
 
 	connector.installHandlers(server,{prefix:'/socket_swag'});
@@ -83,3 +117,4 @@ module.exports=function(server) {
 
 
 // http://jinzhangg.github.io/posts/2013/sockjs-redis-nodejs-tutorial/
+// http://www.phloxblog.in/redis-commands-with-node-js/#.V8BN13V96Uk

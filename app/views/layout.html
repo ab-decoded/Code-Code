@@ -55,6 +55,13 @@
             MDSnackbars.show(options);
           {% endfor %}
         {% endif %}
+        {% if (errors && errors.length) %}
+          {% for error in errors %}
+            console.log('yolo');
+            options.text="{{error}}";
+            MDSnackbars.show(options);
+          {% endfor %}
+        {% endif %}
       });
     </script>
     {% block script %}{% endblock %}

@@ -6,7 +6,7 @@
 <div></div>
 <textarea id="codeArea"></textarea>
 <select class="ui search dropdown" id="mode-select">
-  <option value="">Select</option>
+  <option value="Plain Text">Plain text</option>
   <option value="Javascript">Javascript</option>
   <option value="C++">C++</option>
   <option value="C">C</option>
@@ -27,6 +27,7 @@
 	userid="{{user.id}}";
 	username="{{user.name}}";
 	baseUrl="{{baseUrl}}";
+  code=`{{code}}`;
 </script>
 <script type='text/javascript' src='js/index.js'></script>
 <script src="js/code_main.js"></script>

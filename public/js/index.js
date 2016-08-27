@@ -1,4 +1,4 @@
-var sock = new SockJS('http://localhost:3000/socket_swag?code='+window.location.href.replace(baseUrl,""));
+var sock = new SockJS('http://localhost:3000/socket_swag?code='+window.location.pathname.replace("/",""));
  sock.onopen = function() {
  	var url=window.location.href;
      var res={

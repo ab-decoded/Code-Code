@@ -33,6 +33,7 @@ redis.on('ready',function(){
 /*Start Server*/
 http.listen(config.port,function(){
 	console.log('listening on port '+config.port);
+  redis.flushdb();
 });
 
 module.exports=app;
