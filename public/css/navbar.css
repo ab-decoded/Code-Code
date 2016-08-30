@@ -39,7 +39,7 @@
 		display:block;
 	}
 	.siteContainer{
-		padding-top:60px;
+		padding-top:55px;
 	}
 }
 
@@ -100,6 +100,11 @@
 #mobile-sidebar{
 	display:none;
 }
+
+#mobile-heading{
+	width:150px !important;
+}
+
 @media all and (max-width: 520px){
 	.profile-container{
 		margin-left:0 !important;

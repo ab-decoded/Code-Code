@@ -1,9 +1,43 @@
 mongoose=require('mongoose');
 Url = mongoose.model('Url');
+var async=require("async");
 var redis = require("redis"),
 	client = redis.createClient(config.redis.port,config.redis.host);
 
 var slugPattern=new RegExp("^[a-z0-9-]+$");
+
+var redis_db_map={
+	"code":"data",
+	"mode":"language"
+};
+
+function check_in_redis_or_get_from_db(key,url,msg,callback){
+	client.hexists("code_change:"+url,key,function(err,exists){
+		if(err){
+			console.log("Error in searching code in Redis cache: "+err);
+			callback(null,"");
+		}else{
+			var value="";
+			if(exists===0){
+				client.hset('code_change:'+url,key,msg[redis_db_map[key]],function(){
+					console.log("Setting " + key + " in redis: "+url);
+					// Page refresh causes problem.
+					// First the GET request arrives, then the previous Socket connection is broken, and the new connection is established.
+				});
+			}
+			client.hget('code_change:'+url,key,function(err,value){
+				if(err){
+					console.log('Could not load code from Redis Cache: '+err);
+					callback(null,"");
+				}
+				else{
+					console.log(value);
+					callback(null,value);
+				}
+			});
+		}
+	});	
+}
 
 exports.index = function(req,res){
 	var url=req.url.replace("/","");
@@ -13,27 +47,20 @@ exports.index = function(req,res){
 		}).exec(function(err,msgs){
 			if(msgs.length){
 				console.log('Url '+url + " already exists.");
-				client.hexists("code_text:"+url,"code",function(err,exists){
-					if(err){
-						console.log("Error in searching code in Redis cache: "+err);
-						return res.render('code/code',{"code":""});
-					}else{
-						var code="";
-						if(exists===0){
-							client.hset('code_text:'+url,"code",msgs[0].data);
-						}
-						client.hget('code_text:'+url,"code",function(err,code){
-							if(err){
-								console.log('Could not load code from Redis Cache: '+err);
-								return res.render('code/code',{"code":''});
-							}
-							else{
-								console.log(code);
-								return res.render('code/code',{"code":encodeURI(code)});
-							}
-						});
+				var params={};
+
+				async.series({
+				    code:function(callback){
+				    	encodeURI(check_in_redis_or_get_from_db("code",url,msgs[0],callback));
+				    },
+				    mode:function(callback){
+				    	check_in_redis_or_get_from_db("mode",url,msgs[0],callback);
 					}
-				});	
+				}, function(err, results) {
+					console.log(results);
+					return res.render("code/code",results);
+				});
+
 			}
 			else{
 				req.flash('error','No such code-URL exists. Please create a new one.');
@@ -64,7 +91,7 @@ exports.urlController= function(req,res){
 						created:Date(),
 						url:url,
 						data:"",
-						language:"plain-text",
+						language:"Plain Text",
 						messages:[]
 					});
 					return newCodeUrl.save(function(err,newCodeUrl){

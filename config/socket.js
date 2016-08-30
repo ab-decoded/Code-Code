@@ -9,7 +9,13 @@ const redis = require("redis"),
 
 const clients={};
 
-function broadcast_change(code,current_user_id,message){
+var redis_db_map={
+	"code":"data",
+	"mode":"language"
+};
+
+function broadcast_change(code,current_user_id,message,message_type){
+	console.log(message);
 	client.smembers("code_users:"+code,function(err,users){
 		if(err)
 			console.log("Error in broadcast: "+err);
@@ -17,8 +23,10 @@ function broadcast_change(code,current_user_id,message){
 			users.forEach(function(user){
 				user=JSON.parse(user);
 				if(user.connectionid!=current_user_id){
-					if(clients[user.connectionid]!==null&&clients[user.connectionid]!==undefined)
+					if(clients[user.connectionid]!==null&&clients[user.connectionid]!==undefined){
+						message.type=message_type;
 						clients[user.connectionid].write(JSON.stringify(message));	
+					}
 				}
 			});
 		}
@@ -32,7 +40,6 @@ module.exports=function(server) {
 
 
 	connector.on('connection',function(conn){
-
 		var code=url.parse(conn.url,true).query.code;
 		clients[conn.id]=conn;
 		var user;
@@ -45,18 +52,27 @@ module.exports=function(server) {
 		code_redis.subscribe("code:"+code);
 
 		subscribers_redis.on("message",function(channel,message){
+			console.log("New user: "+user);
 			client.sadd("code_users:"+code,message);
 		});
 
 		code_redis.on("message",function(channel,message){
-			client.hset("code_text:"+code,"code",message);
+			var code_change=JSON.parse(message);
+			switch(code_change.type){
+				case "codeChange":
+					client.hset("code_change:"+code,"code",code_change.code);
+					break;
+				case "modeChange":
+					client.hset("code_change:"+code,"mode",code_change.mode);
+					break;
+			}
 		});
 
 		
 		conn.on('close',function(){
 			
 			//Remove user from subscribers list in Redis cache
-			if(user!==null){
+			if(user!==null&&user!==undefined){
 				client.srem("code_users:"+code,user);
 				// console.log(user);
 				console.log('Gaya connection!: '+code);
@@ -66,13 +82,15 @@ module.exports=function(server) {
 			delete clients[conn.id];
 
 			//Write the data to MongoDB
-			client.hget('code_text:'+code,"code",function(err,text){
+			client.hmget('code_change:'+code,"code","mode",function(err,values){
 				if(err){
 					console.log('Could not read code from Redis Cache while writing to MongoDb: '+err);
 				}
 				else{
+					console.log(values);
 					Url.findOne({ url: code }, function (err, doc){
-					  doc.data = text;
+					  doc.data = values[0];
+					  doc.language = values[1];
 					  doc.save();
 					});
 				}
@@ -85,7 +103,8 @@ module.exports=function(server) {
 					return;
 				}
 				if(users===null||users.length===0){
-					client.del("code_text:"+code,"code");
+					console.log("code changes removed from Redis: ",code);
+					client.del("code_change:"+code,"code");
 				}
 			});
 
@@ -93,19 +112,33 @@ module.exports=function(server) {
 
 		conn.on('data',function(msg){
 			msg=JSON.parse(msg);
-			if(msg.type==="connection"){
-				var _user={
-					username:msg.username,
-					userid:msg.userid,
-					connectionid:conn.id
-				};
-				user=JSON.stringify(_user);
-				publisher.publish('subscribers:'+code,user);
-			}
-			else if(msg.type==="codeChange"){
-				broadcast_change(code,conn.id,msg.change);
-				publisher.publish('code:'+code,msg.code);
-				console.log(msg);
+			var _code;
+			switch(msg.type){
+				case "connection":
+					var _user={
+						username:msg.username,
+						userid:msg.userid,
+						connectionid:conn.id
+					};
+					user=JSON.stringify(_user);
+					publisher.publish('subscribers:'+code,user);
+					break;
+				case "codeChange":
+					_code={
+						type:"codeChange",
+						code:msg.code
+					};
+					broadcast_change(code,conn.id,msg.change,msg.type);
+					publisher.publish('code:'+code,JSON.stringify(_code));
+					break;
+				case "modeChange":
+					_code={
+						type:"modeChange",
+						mode:msg.change.mode
+					};
+					broadcast_change(code,conn.id,msg.change,msg.type);
+					publisher.publish('code:'+code,JSON.stringify(_code));
+					break;
 			}
 		});
 
