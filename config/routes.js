@@ -59,5 +59,12 @@ module.exports = function(app,router,passport){
 	///////////////////////////////
 	var code=require('../app/controllers/code');
 	router.get('/addCodeUrl',code.urlController);
-	router.get('/:code',code.index);
+	// router.get('/:code',code.index);
+
+	/////////////////////////////////
+	//drawingboard routes///////////
+	///////////////////////////////
+	var drawingBoard=require('../app/controllers/drawingboard');
+	router.get('/board/:code',drawingBoard.index);
+	router.get('/getPaths',drawingBoard.getPaths);
 };

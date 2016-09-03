@@ -7,6 +7,9 @@ const redis = require("redis"),
 	client = redis.createClient(config.redis.port,config.redis.host),
     publisher = redis.createClient(config.redis.port,config.redis.host);
 
+const dmpmod = require('diff_match_patch'),
+	dmp = new dmpmod.diff_match_patch();
+
 const clients={};
 
 var redis_db_map={
@@ -33,6 +36,23 @@ function broadcast_change(code,current_user_id,message,message_type){
 	});
 }
 
+function broadcast_path(code,current_user_id,message,message_type){
+	client.smembers("board_subscribers:"+code,function(err,users){
+		if(err)
+			console.log("Error in broadcast: "+err);
+		else{
+			users.forEach(function(user){
+				user=JSON.parse(user);
+				if(user.connectionid!=current_user_id){
+					if(clients[user.connectionid]!==null&&clients[user.connectionid]!==undefined){
+						message.type=message_type;
+						clients[user.connectionid].write(JSON.stringify(message));	
+					}
+				}
+			});
+		}
+	});
+}
 
 module.exports=function(server) {
 	var sockjs=require('sockjs');
@@ -128,6 +148,18 @@ module.exports=function(server) {
 						type:"codeChange",
 						code:msg.code
 					};
+
+					client.hget('code_change:'+code,'code',function(err,value){
+						if(err){
+							console.log('Could not load code from Redis Cache: '+err);
+							callback(null,"");
+						}
+						else{
+							console.log("**********************************");
+							console.log(dmp.diff_main(msg.code,value));
+							console.log("**********************************");
+						}
+					});
 					broadcast_change(code,conn.id,msg.change,msg.type);
 					publisher.publish('code:'+code,JSON.stringify(_code));
 					break;
@@ -145,6 +177,109 @@ module.exports=function(server) {
 	});
 
 	connector.installHandlers(server,{prefix:'/socket_swag'});
+	
+	var board_connector = sockjs.createServer({ sockjs_url: 'http://cdn.jsdelivr.net/sockjs/1.0.1/sockjs.min.js' });
+
+	board_connector.on('connection',function(conn){
+		var code=url.parse(conn.url,true).query.code;
+		clients[conn.id]=conn;
+		var user;
+		console.log('Socket chala iss board ke liye!: '+code);
+		
+		var subscribers_redis=redis.createClient(config.redis.port,config.redis.host);
+		var board_redis=redis.createClient(config.redis.port,config.redis.host);
+
+		subscribers_redis.subscribe("board_subscribers:"+code);
+		board_redis.subscribe("board:"+code);
+
+		subscribers_redis.on("message",function(channel,message){
+			console.log("New user: "+user);
+			client.sadd("board_subscribers:"+code,message);
+		});
+
+		board_redis.on("message",function(channel,message){
+			var new_path=JSON.parse(message);
+			client.lpush("paths:"+code,new_path.path);
+		});
+
+		
+		conn.on('close',function(){
+			
+			//Remove user from subscribers list in Redis cache
+			if(user!==null&&user!==undefined){
+				client.srem("board_subscribers:"+code,user);
+				// console.log(user);
+				console.log('Gaya connection!: '+code);
+			}
+			
+			//Remove conn from connected clients
+			delete clients[conn.id];
+
+			//Write the data to MongoDB
+			client.lrange('paths:'+code,0,-1,function(err,paths){
+				if(err){
+					console.log('Could not read code from Redis Cache while writing to MongoDb: '+err);
+				}
+				else{
+					console.log(paths);
+					Board.findOne({ url: code }, function (err, doc){
+					  doc.paths.push.apply(doc.paths,paths);
+					  doc.save();
+					});
+				}
+			});
+
+			//If the last instance of a code exits, the data is removed from Redis cache
+			client.smembers("board_subscribers:"+code,function(err,users){
+				if(err){
+					console.log("Error reading members info subscribed for the board: "+err);
+					return;
+				}
+				if(users===null||users.length===0){
+					client.del("paths:"+code);
+					console.log("Path changes removed from Redis: ",code);
+				}
+			});
+
+		});
+
+		conn.on('data',function(msg){
+			msg=JSON.parse(msg);
+
+			var _code;
+			switch(msg.type){
+				case "connection":
+					var _user={
+						username:msg.username,
+						userid:msg.userid,
+						connectionid:conn.id
+					};
+					user=JSON.stringify(_user);
+					publisher.publish("board_subscribers:"+code,user,function(err){
+						if(err)
+							console.log(err);
+					});
+					break;
+				case "path":
+					_path={
+						type:"path",
+						path:msg.path
+					};
+					// console.log(_path);
+					broadcast_path(code,conn.id,msg,msg.type);
+					publisher.publish("board:"+code,JSON.stringify(_path),function(err){
+						if(err)
+							console.log(err);
+					});
+					break;
+			}
+		});
+
+	});
+
+	board_connector.installHandlers(server,{prefix:'/board_socket'});
+
+
 };
 
 

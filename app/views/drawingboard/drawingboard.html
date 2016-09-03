@@ -1,0 +1,36 @@
+{% extends '../basic_layout.html' %}
+{% block style %}
+<link rel="stylesheet" type="text/css" href="/css/spectrum.css">
+<link rel="stylesheet" type="text/css" href="/css/drawingboard.css">
+{% endblock %}
+{%block main%}
+<div id="controls">
+  <div class="select-color">
+    <ul>
+      <li value="#000" class="black selected"></li>
+      <li value="#FF6961" class="red"></li>
+      <li value="#77DD77" class="green"></li>
+      <li value="#779ECB" class="blue"></li>
+      <li class="add-color barbaad">
+        <span class="color-plus">+</span>
+      </li>
+    </ul>
+  </div>
+  <div class="select-width">
+    <span class="line-slider" style="line-height:70px;"><input id="line-size" name="line-size" type="range" min=1 max=14 value=1></span>
+  </div>
+</div>
+<canvas id="drawingboard"></canvas>
+{% endblock %}
+{% block script %}
+<script type="text/javascript">
+// JUGAAD
+  login=("{{login}}"==="true");
+  userid="{{user.id}}";
+  username="{{user.name}}";
+</script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.6.4/fabric.min.js"></script>
+<script type="text/javascript" src="/js/spectrum.js"></script>
+<script type='text/javascript' src='/js/drawingboard/socket_connect.js'></script>
+<script type='text/javascript' src='/js/drawingboard/drawingboard.js'></script>
+{% endblock %}

@@ -24,6 +24,7 @@
     "cookie-parser": "^1.4.3",
     "cookie-session": "^2.0.0-alpha.1",
     "csurf": "^1.9.0",
+    "diff_match_patch": "^0.1.1",
     "ejs": "latest",
     "ejs-locals": "latest",
     "express": "latest",
