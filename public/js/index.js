@@ -1,23 +1,23 @@
-var sock = new SockJS(window.location.origin+'/socket_swag?code='+window.location.pathname.replace("/",""));
+var socket = io.connect(window.location.origin+'/socket_swag?code='+window.location.pathname.replace("/",""));
 
-sock.onopen = function() {
+socket.on('connect',function(){
+	console.log("Working.");
 	var url=window.location.href;
     var res={
-    	"type":"connection",
     	"url":url
     };
     if(login===true){
 	 	res.userid=userid;
     	res.username=username;
     }
-	 else{
+	else{
 	 	res.userid="0";
 	 	res.username="anonymous";
 	 }
-    sock.send(JSON.stringify(res));
-};
+	 socket.emit('connected',JSON.stringify(res));
+});
 
 window.onbeforeunload = function(){
-	sock.onclose=function(){};
-	sock.close();
+	socket.on('disconnect',function(){});
+	socket.disconnect();
 };

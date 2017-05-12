@@ -33,8 +33,14 @@ function broadcast_change(code,current_user_id,message,message_type){
 				user=JSON.parse(user);
 				if(user.connectionid!=current_user_id){
 					if(clients[user.connectionid]!==null&&clients[user.connectionid]!==undefined){
-						message.type=message_type;
-						clients[user.connectionid].write(JSON.stringify(message));	
+						switch(message_type){
+							case "codeChage":
+								clients[user.connectionid].emit("codeChangeSet",JSON.stringify(message));	
+								break;
+							case "modeChange":	
+								clients[user.connectionid].emit("modeChangeSet",JSON.stringify(message));	
+								break;
+						}
 					}
 				}
 			});
@@ -42,36 +48,39 @@ function broadcast_change(code,current_user_id,message,message_type){
 	});
 }
 
+function removePropFromJSON(obj,properties){
+	return _.omit(obj,properties);
+}
 
 module.exports=function(server,callback) {
-	var sockjs=require('sockjs');
-	// var connector = sockjs.createServer({ sockjs_url: 'http://cdn.jsdelivr.net/sockjs/1.0.1/sockjs.min.js' });
+	var io=require('socket.io')(server);
 	async.waterfall([
 		function(){
-			var user; //FIX THIS
 
 			sub.psubscribe(REDIS_BUCKET+"*");
-			var connector = sockjs.createServer({ sockjs_url: 'http://cdn.jsdelivr.net/sockjs/1.0.1/sockjs.min.js' });
 
 			sub.on("pmessage",function(pattern,channel,message){
 				console.log("Redis subscriber received a message.");
 				var parsed_message=JSON.parse(message);
-				switch(parsed_message.type){
+				var message_type=parsed_message.type;
+				var message_room=parsed_message.room;
+				parsed_message=removePropFromJSON(parsed_message,["type","room"]);
+				switch(message_type){
 					case "subscribe":
-						console.log("New user: "+user);
-						writer.sadd("code_users:"+parsed_message.room,JSON.stringify(_.omit(parsed_message,["type","room"])));
+						writer.sadd("code_users:"+message_room,JSON.stringify(parsed_message));
 						break;
 					case "codeChange":
-						writer.hset("code_change:"+parsed_message.room,"code",parsed_message.code);
+						writer.hset("code_change:"+message_room,"code",parsed_message.code);
 						break;
 					case "modeChange":
-						writer.hset("code_change:"+parsed_message.room,"mode",parsed_message.mode);
+						writer.hset("code_change:"+message_room,"mode",parsed_message.mode);
 						break;
 				}
 			});
 
-			connector.on('connection',function(conn){
-				var room=url.parse(conn.url,true).query.code;
+			io.of('/socket_swag').on('connection',function(conn){
+				var user; //FIX THIS			
+				var room=url.parse(conn.handshake.url,true).query.code;
 				clients[conn.id]=conn;
 				console.log('Socket chala iss code pe!: '+room);
 
@@ -79,12 +88,12 @@ module.exports=function(server,callback) {
 				// code_redis.subscribe("code:"+code);
 
 				
-				conn.on('close',function(){
-					
+				conn.on('disconnect',function(){
 					//Remove user from subscribers list in Redis cache
 					if(user!==null&&user!==undefined){
-						writer.srem("code_users:"+room,user);
-						// console.log(user);
+						var temp_user = JSON.stringify(removePropFromJSON(JSON.parse(user),["type","room"]));
+						console.log("Fucked: "+temp_user);
+						writer.srem("code_users:"+room,temp_user);
 						console.log('Gaya connection!: '+room);
 					}
 					
@@ -114,50 +123,86 @@ module.exports=function(server,callback) {
 						}
 						if(users===null||users.length===0){
 							console.log("code changes removed from Redis: ",room);
-							sub.del("code_change:"+room,"code");
+							writer.del("code_change:"+room,"code");
 						}
 					});
 
 				});
 
-				conn.on('data',function(msg){
+				conn.on('connected',function(msg){
 					msg=JSON.parse(msg);
-					var _code;
-					switch(msg.type){
-						case "connection":
-							var _user={
-								type:"subscribe",
-								username:msg.username,
-								userid:msg.userid,
-								connectionid:conn.id,
-								room:room
-							};
-							user=JSON.stringify(_user);
-							publisher.publish(REDIS_BUCKET+REDIS_SUBSCRIBERS_STRING,user);
-							break;
-						case "codeChange":
-							_code={
-								type:"codeChange",
-								code:msg.code,
-								room:room
-							};
-							broadcast_change(room,conn.id,msg.change,msg.type);
-							publisher.publish(REDIS_BUCKET+REDIS_CODE_STRING,JSON.stringify(_code));
-							break;
-						case "modeChange":
-							_code={
-								type:"modeChange",
-								mode:msg.change.mode,
-								room:room
-							};
-							broadcast_change(room,conn.id,msg.change,msg.type);
-							publisher.publish(REDIS_BUCKET+REDIS_CODE_STRING,JSON.stringify(_code));
-							break;
-					}
+
+					var _user={
+						type:"subscribe",
+						username:msg.username,
+						userid:msg.userid,
+						connectionid:conn.id,
+						room:room
+					};
+					user=JSON.stringify(_user);
+					publisher.publish(REDIS_BUCKET+REDIS_SUBSCRIBERS_STRING,user);
 				});
 
+				conn.on('modeChanged',function(msg){
+					msg=JSON.parse(msg);
+					_code={
+						type:"modeChange",
+						mode:msg.change.mode,
+						room:room
+					};
+					broadcast_change(room,conn.id,msg.change,msg.type);
+					publisher.publish(REDIS_BUCKET+REDIS_CODE_STRING,JSON.stringify(_code));
+				});
+
+				conn.on('codeChanged',function(msg){
+					msg=JSON.parse(msg);
+					_code={
+						type:"codeChange",
+						code:msg.change.code,
+						room:room
+					};
+					publisher.publish(REDIS_BUCKET+REDIS_CODE_STRING,JSON.stringify(_code));
+				});
+
+
+				// conn.on('data',function(msg){
+				// 	msg=JSON.parse(msg);
+				// 	var _code;
+				// 	console.log(msg);
+				// 	switch(msg.type){
+				// 		case "connection":
+				// 			var _user={
+				// 				type:"subscribe",
+				// 				username:msg.username,
+				// 				userid:msg.userid,
+				// 				connectionid:conn.id,
+				// 				room:room
+				// 			};
+				// 			user=JSON.stringify(_user);
+				// 			publisher.publish(REDIS_BUCKET+REDIS_SUBSCRIBERS_STRING,user);
+				// 			break;
+				// 		case "codeChange":
+				// 			_code={
+				// 				type:"codeChange",
+				// 				code:msg.code,
+				// 				room:room
+				// 			};
+				// 			broadcast_change(room,conn.id,msg.change,msg.type);
+				// 			publisher.publish(REDIS_BUCKET+REDIS_CODE_STRING,JSON.stringify(_code));
+				// 			break;
+				// 		case "modeChange":
+				// 			_code={
+				// 				type:"modeChange",
+				// 				mode:msg.change.mode,
+				// 				room:room
+				// 			};
+				// 			broadcast_change(room,conn.id,msg.change,msg.type);
+				// 			publisher.publish(REDIS_BUCKET+REDIS_CODE_STRING,JSON.stringify(_code));
+				// 			break;
+				// 	}
+				// });
+
 			});
-			connector.installHandlers(server,{prefix:'/socket_swag'});
 
 
 		},
@@ -169,113 +214,6 @@ module.exports=function(server,callback) {
 	});
 	
 
-	// connector.on('connection',function(conn){
-	// 	var code=url.parse(conn.url,true).query.code;
-	// 	clients[conn.id]=conn;
-	// 	var user;
-	// 	console.log('Socket chala iss code pe!: '+code);
-		
-	// 	var subscribers_redis=redis.createClient(config.redis.port,config.redis.host);
-	// 	var code_redis=redis.createClient(config.redis.port,config.redis.host);
-
-	// 	subscribers_redis.subscribe("subscribers:"+code);
-	// 	code_redis.subscribe("code:"+code);
-
-	// 	subscribers_redis.on("message",function(channel,message){
-	// 		console.log("New user: "+user);
-	// 		client.sadd("code_users:"+code,message);
-	// 	});
-
-	// 	code_redis.on("message",function(channel,message){
-	// 		var code_change=JSON.parse(message);
-	// 		switch(code_change.type){
-	// 			case "codeChange":
-	// 				client.hset("code_change:"+code,"code",code_change.code);
-	// 				break;
-	// 			case "modeChange":
-	// 				client.hset("code_change:"+code,"mode",code_change.mode);
-	// 				break;
-	// 		}
-	// 	});
-
-		
-	// 	conn.on('close',function(){
-			
-	// 		//Remove user from subscribers list in Redis cache
-	// 		if(user!==null&&user!==undefined){
-	// 			client.srem("code_users:"+code,user);
-	// 			// console.log(user);
-	// 			console.log('Gaya connection!: '+code);
-	// 		}
-			
-	// 		//Remove conn from connected clients
-	// 		delete clients[conn.id];
-
-	// 		//Write the data to MongoDB
-	// 		client.hmget('code_change:'+code,"code","mode",function(err,values){
-	// 			if(err){
-	// 				console.log('Could not read code from Redis Cache while writing to MongoDb: '+err);
-	// 			}
-	// 			else{
-	// 				console.log(values);
-	// 				Url.findOne({ url: code }, function (err, doc){
-	// 				  doc.data = values[0];
-	// 				  doc.language = values[1];
-	// 				  doc.save();
-	// 				});
-	// 			}
-	// 		});
-
-	// 		//If the last instance of a code exits, the data is removed from Redis cache
-	// 		client.smembers("code_users:"+code,function(err,users){
-	// 			if(err){
-	// 				console.log("Error reading members info subscribed for the code: "+err);
-	// 				return;
-	// 			}
-	// 			if(users===null||users.length===0){
-	// 				console.log("code changes removed from Redis: ",code);
-	// 				client.del("code_change:"+code,"code");
-	// 			}
-	// 		});
-
-	// 	});
-
-	// 	conn.on('data',function(msg){
-	// 		msg=JSON.parse(msg);
-	// 		var _code;
-	// 		switch(msg.type){
-	// 			case "connection":
-	// 				var _user={
-	// 					username:msg.username,
-	// 					userid:msg.userid,
-	// 					connectionid:conn.id
-	// 				};
-	// 				user=JSON.stringify(_user);
-	// 				console.log("Jaaneman main chal raha hoon!");
-	// 				publisher.publish('subscribers:'+code,user);
-	// 				break;
-	// 			case "codeChange":
-	// 				_code={
-	// 					type:"codeChange",
-	// 					code:msg.code
-	// 				};
-	// 				broadcast_change(code,conn.id,msg.change,msg.type);
-	// 				publisher.publish('code:'+code,JSON.stringify(_code));
-	// 				break;
-	// 			case "modeChange":
-	// 				_code={
-	// 					type:"modeChange",
-	// 					mode:msg.change.mode
-	// 				};
-	// 				broadcast_change(code,conn.id,msg.change,msg.type);
-	// 				publisher.publish('code:'+code,JSON.stringify(_code));
-	// 				break;
-	// 		}
-	// 	});
-
-	// });
-
-	// connector.installHandlers(server,{prefix:'/socket_swag'});
 };
 
 

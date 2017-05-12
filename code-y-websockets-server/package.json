@@ -1,0 +1,17 @@
+{
+  "name": "code-y-websockets-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "y-array": "^10.0.6",
+    "y-leveldb": "0.0.1",
+    "y-text": "^9.4.0",
+    "y-websockets-server": "^9.2.0"
+  }
+}
